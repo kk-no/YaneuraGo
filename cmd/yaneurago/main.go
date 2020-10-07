@@ -1,7 +1,15 @@
 package main
 
-import "fmt"
+import (
+	"context"
+	"log"
+
+	"github.com/kk-no/YaneuraGo/protocol/usi"
+)
 
 func main() {
-	fmt.Println("test")
+	engine := usi.New()
+	if err := engine.Connect(context.TODO(), "/engine"); err != nil {
+		log.Fatal(err)
+	}
 }
