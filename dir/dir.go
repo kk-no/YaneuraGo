@@ -2,7 +2,7 @@ package dir
 
 import "os"
 
-func ChangeDir(dir string) (func() error, error)  {
+func ChangeDir(dir string) (func() error, error) {
 	current, err := os.Getwd()
 	if err != nil {
 		return nil, err
