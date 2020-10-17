@@ -23,8 +23,10 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
 		if scanner.Scan() {
-			if err := usiEngine.SendCommand(ctx, scanner.Text()); err != nil {
-				log.Fatal(err)
+			line := scanner.Text()
+			usiEngine.SendCommand(ctx, line)
+			if line == "quit" {
+				break
 			}
 		}
 	}

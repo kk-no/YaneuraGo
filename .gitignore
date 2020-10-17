@@ -17,5 +17,8 @@
 # IDE setting files
 .idea
 
+# Binary directory
+/.bin
+
 # Engine directory
 /engine
