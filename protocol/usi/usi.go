@@ -36,9 +36,6 @@ func New() Engine {
 }
 
 func (u *usi) Connect(ctx context.Context, path string) error {
-	log.Println("Call connect")
-	log.Printf("Specify engine directory: %v\n", path)
-
 	if err := u.Disconnect(ctx); err != nil {
 		return err
 	}
@@ -56,6 +53,7 @@ func (u *usi) Connect(ctx context.Context, path string) error {
 	}()
 
 	u.process = exec.CommandContext(ctx, engine.Binary)
+
 	if u.procIn, err = u.process.StdinPipe(); err != nil {
 		log.Println("Failed to get std in pipe, cause by", err)
 		return err
@@ -77,7 +75,6 @@ func (u *usi) Connect(ctx context.Context, path string) error {
 }
 
 func (u *usi) Disconnect(ctx context.Context) error {
-	log.Println("Call disconnect")
 	u.process = nil
 	u.state = engine.Disconnected
 	return nil
@@ -88,11 +85,11 @@ func (u *usi) IsConnected(ctx context.Context) bool {
 }
 
 func (u *usi) SendCommand(ctx context.Context, command string) error {
-	log.Println("Call SendCommand")
 	log.Println(">", command)
 	if !u.IsConnected(ctx) {
 		return errors.New("process is not started")
 	}
+
 	if _, err := u.procIn.Write([]byte(command + "\n")); err != nil {
 		log.Println("Failed to write std in, cause by", err)
 		return err
@@ -101,7 +98,6 @@ func (u *usi) SendCommand(ctx context.Context, command string) error {
 }
 
 func (u *usi) ReadResult(ctx context.Context) error {
-	log.Println("Call ReadResult")
 	if !u.IsConnected(ctx) {
 		return errors.New("process is not started")
 	}

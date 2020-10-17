@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"log"
+	"os"
 	"path/filepath"
 
 	"github.com/kk-no/YaneuraGo/protocol/state/engine"
@@ -16,13 +18,14 @@ func main() {
 	if err := usiEngine.Connect(ctx, filepath.Join(engine.Dir, engine.Path)); err != nil {
 		log.Fatal(err)
 	}
+	defer usiEngine.Disconnect(ctx)
 
-	// TODO: Receiving Commands from Outside.
-	cmd := []string{"usi", "isready", "quit"}
-	for _, v := range cmd {
-		if err := usiEngine.SendCommand(ctx, v); err != nil {
-			log.Fatal(err)
+	scanner := bufio.NewScanner(os.Stdin)
+	for {
+		if scanner.Scan() {
+			if err := usiEngine.SendCommand(ctx, scanner.Text()); err != nil {
+				log.Fatal(err)
+			}
 		}
 	}
-	usiEngine.Disconnect(ctx)
 }
