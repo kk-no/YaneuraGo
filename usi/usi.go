@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/kk-no/YaneuraGo/dir"
-
 	"github.com/kk-no/YaneuraGo/state/engine"
 )
 
@@ -14,25 +13,21 @@ type Engine interface {
 	SetState(ctx context.Context, state engine.State)
 	Connect(ctx context.Context, path string) error
 	Disconnect(ctx context.Context) error
-	SendCommand(ctx context.Context, command string)
 	IsConnected(ctx context.Context) bool
+	SendCommand(ctx context.Context, command string)
 }
 
 type usi struct {
-	state   engine.State
-	options map[string]string
-	// TODO: Define the parts of the subprocess involved separately
+	state engine.State
+	// options map[string]string
 	process ReadWriteProcessor
-	result  *ThinkResult
+	result  ResultManager
 	isDebug bool
 }
 
 func New() Engine {
 	return &usi{
-		state:   engine.Disconnected,
-		options: nil,
-		process: nil,
-		result:  NewResult(),
+		state: engine.Disconnected,
 		// FIXME: change debug setting
 		isDebug: true,
 	}
@@ -48,21 +43,19 @@ func (u *usi) SetState(ctx context.Context, state engine.State) {
 func (u *usi) Connect(ctx context.Context, path string) error {
 	u.SetState(ctx, engine.WaitConnecting)
 
-	f, err := dir.ChangeDir(path)
+	// Need to move the directory in order for the engine to read the eval.
+	_, err := dir.ChangeDir(path)
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if err := f(); err != nil {
-			log.Println("Failed to return original directory:", err)
-		}
-	}()
 
 	u.process, err = NewReadWriteProcessor(ctx)
 	if err != nil {
 		log.Println("Failed to init process:", err)
 	}
 	u.process.Start(ctx)
+
+	u.result = NewResultManager()
 
 	u.SetState(ctx, engine.Connected)
 
@@ -87,7 +80,7 @@ func (u *usi) SendCommand(ctx context.Context, command string) {
 }
 
 func (u *usi) HandleMessage(ctx context.Context, message string) {
-	u.result.LastReceive = message
+	u.result.ReceiveMessage(message)
 
 	var token string
 	if index := strings.Index(message, " "); index == -1 {

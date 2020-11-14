@@ -6,7 +6,7 @@ import (
 	"io"
 	"log"
 	"os/exec"
-	"time"
+	"sync"
 
 	"github.com/kk-no/YaneuraGo/state/engine"
 )
@@ -21,14 +21,16 @@ type ReadWriteProcessor interface {
 
 type process struct {
 	cmd       *exec.Cmd
+	wg        *sync.WaitGroup
+	cancel    context.CancelFunc
 	procIn    io.WriteCloser
 	procOut   io.ReadCloser
 	sendQueue chan string
-	cancel    context.CancelFunc
 }
 
 func NewReadWriteProcessor(ctx context.Context) (ReadWriteProcessor, error) {
 	p := new(process)
+	p.wg = &sync.WaitGroup{}
 	p.cmd = exec.CommandContext(ctx, engine.Binary)
 	p.sendQueue = make(chan string)
 
@@ -53,16 +55,20 @@ func NewReadWriteProcessor(ctx context.Context) (ReadWriteProcessor, error) {
 
 func (p *process) Start(ctx context.Context) {
 	ctx, cancel := context.WithCancel(ctx)
-	go p.Read(ctx)
-	go p.Write(ctx)
 	p.cancel = cancel
+
+	p.wg.Add(1)
+	go p.Read(ctx)
+
+	p.wg.Add(1)
+	go p.Write(ctx)
 }
 
 func (p *process) Stop() error {
 	if p.cancel != nil {
 		p.cancel()
-		// Wait for a process that has already been started.
-		time.Sleep(100 * time.Millisecond)
+		// Wait for read and write goroutine close.
+		p.wg.Wait()
 	}
 	if p.sendQueue != nil {
 		close(p.sendQueue)
@@ -84,7 +90,7 @@ func (p *process) Write(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			log.Println("Write process closed")
+			p.wg.Done()
 			return
 		default:
 			command := <-p.sendQueue
@@ -102,7 +108,7 @@ func (p *process) Read(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			log.Println("Read process closed")
+			p.wg.Done()
 			return
 		default:
 			if scanner.Scan() {

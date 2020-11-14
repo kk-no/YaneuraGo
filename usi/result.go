@@ -5,32 +5,42 @@ import (
 	"strings"
 )
 
-type ThinkResult struct {
+type ResultManager interface {
+	ReceiveMessage(msg string)
+	HandleBestMove(ctx context.Context, message string)
+	HandleInfo(ctx context.Context, message string)
+}
+
+type result struct {
 	BestMove    string
 	Ponder      string
 	LastReceive string
 	Pvs         []string
 }
 
-func NewResult() *ThinkResult {
-	return &ThinkResult{}
+func NewResultManager() ResultManager {
+	return &result{}
 }
 
-func (tr *ThinkResult) HandleBestMove(ctx context.Context, message string) {
+func (r *result) ReceiveMessage(msg string) {
+	r.LastReceive = msg
+}
+
+func (r *result) HandleBestMove(ctx context.Context, message string) {
 	messages := strings.Split(message, " ")
 	if len(messages) >= 4 && messages[2] == "ponder" {
-		tr.Ponder = messages[3]
-		tr.BestMove = messages[1]
+		r.Ponder = messages[3]
+		r.BestMove = messages[1]
 		return
 	}
 
 	if len(messages) >= 2 {
-		tr.BestMove = messages[1]
+		r.BestMove = messages[1]
 		return
 	}
 
-	tr.Ponder = "none"
-	tr.BestMove = "none"
+	r.Ponder = "none"
+	r.BestMove = "none"
 }
 
-func (tr *ThinkResult) HandleInfo(ctx context.Context, message string) {}
+func (r *result) HandleInfo(ctx context.Context, message string) {}
