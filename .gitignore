@@ -22,3 +22,6 @@
 
 # Engine directory
 /engine
+
+# Output directiry
+out/
