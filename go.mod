@@ -1,3 +1,3 @@
-module github.com/kk-no/YaneuraGo
+module github.com/kk-no/yaneurago
 
 go 1.15

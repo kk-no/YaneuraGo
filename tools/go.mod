@@ -1,4 +1,4 @@
-module github.com/kk-no/YaneuraGo/tools
+module github.com/kk-no/yaneurago/tools
 
 go 1.15
 

@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kk-no/YaneuraGo/dir"
-	"github.com/kk-no/YaneuraGo/state/engine"
+	"github.com/kk-no/yaneurago/dir"
+	"github.com/kk-no/yaneurago/state/engine"
 )
 
 type Engine interface {

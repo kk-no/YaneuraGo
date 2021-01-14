@@ -8,7 +8,7 @@ import (
 	"os/exec"
 	"sync"
 
-	"github.com/kk-no/YaneuraGo/state/engine"
+	"github.com/kk-no/yaneurago/state/engine"
 )
 
 type ReadWriteProcessor interface {
