@@ -3,6 +3,7 @@ package usi
 import (
 	"context"
 	"log"
+	"path/filepath"
 	"strings"
 
 	"github.com/kk-no/YaneuraGo/dir"
@@ -11,13 +12,14 @@ import (
 
 type Engine interface {
 	SetState(ctx context.Context, state engine.State)
-	Connect(ctx context.Context, path string) error
+	Connect(ctx context.Context) error
 	Disconnect(ctx context.Context) error
 	IsConnected(ctx context.Context) bool
 	SendCommand(ctx context.Context, command string)
 }
 
 type usi struct {
+	path  string
 	state engine.State
 	// options map[string]string
 	process ReadWriteProcessor
@@ -25,12 +27,21 @@ type usi struct {
 	isDebug bool
 }
 
-func New() Engine {
-	return &usi{
+var _ Engine = (*usi)(nil)
+
+func NewEngine(options ...Option) Engine {
+	u := &usi{
+		path:  filepath.Join(engine.Dir, engine.Path),
 		state: engine.Disconnected,
 		// FIXME: change debug setting
 		isDebug: true,
 	}
+
+	for _, o := range options {
+		o(u)
+	}
+
+	return u
 }
 
 func (u *usi) SetState(ctx context.Context, state engine.State) {
@@ -40,11 +51,11 @@ func (u *usi) SetState(ctx context.Context, state engine.State) {
 	u.state = state
 }
 
-func (u *usi) Connect(ctx context.Context, path string) error {
+func (u *usi) Connect(ctx context.Context) error {
 	u.SetState(ctx, engine.WaitConnecting)
 
 	// Need to move the directory in order for the engine to read the eval.
-	_, err := dir.ChangeDir(path)
+	_, err := dir.ChangeDir(u.path)
 	if err != nil {
 		return err
 	}

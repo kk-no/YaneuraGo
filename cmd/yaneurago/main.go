@@ -5,17 +5,15 @@ import (
 	"context"
 	"log"
 	"os"
-	"path/filepath"
 
-	"github.com/kk-no/YaneuraGo/state/engine"
 	"github.com/kk-no/YaneuraGo/usi"
 )
 
 func main() {
 	ctx := context.Background()
 
-	usiEngine := usi.New()
-	if err := usiEngine.Connect(ctx, filepath.Join(engine.Dir, engine.Path)); err != nil {
+	usiEngine := usi.NewEngine()
+	if err := usiEngine.Connect(ctx); err != nil {
 		log.Fatal(err)
 	}
 	defer usiEngine.Disconnect(ctx)
